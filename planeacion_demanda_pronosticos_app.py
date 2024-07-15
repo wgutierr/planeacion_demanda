@@ -455,6 +455,9 @@ def main():
                 st.session_state.rmse_mejor_n = []
             if 'error_global_pms' not in st.session_state:
                 st.session_state.error_global_pms = None  # Initialize error_global_pms
+            if 'df_graf' not in st.session_state:
+                st.session_state.df_graf = None  # Initialize df_graf to avoid AttributeError
+                
         else:
             st.error('No se ha cargado el archivo de demanda o no se cargó correctamente. Verifique el formato y vuelva a intentarlo.')
         
