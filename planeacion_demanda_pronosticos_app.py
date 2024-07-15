@@ -62,10 +62,13 @@ def preprocesamiento_1(df):
 
 # ## 1.3. Funciones para calcular PMS
 
-# In[20]:
+# In[25]:
 
 
 def extraer_datos_demanda(df_sem_td):
+    # Seleccionar nombres de SKU unicos
+    unique_ids = df_sem_td['DESC_SKU'].unique()
+    
     # Seleccionar las columnas que comienzan por '202' (las de demanda)
     columnas_dem = df_sem_td.filter(like='202')
 
@@ -75,7 +78,7 @@ def extraer_datos_demanda(df_sem_td):
     # Llevar valores de demanda a una lista
     series_tiempo = columnas_dem.values.tolist()
 
-    return series_tiempo, indice
+    return series_tiempo, indice, unique_ids
 
 
 # In[19]:
@@ -203,9 +206,8 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
 # In[24]:
 
 
-def grafica_interactiva(df_sem_td, df_graf):
-    unique_ids = df_sem_td['DESC_SKU'].unique()
-    # Create a figure
+def grafica_interactiva(unique_ids, df_graf):
+    
     fig = make_subplots()
     
     # Create a plot for each DataFrame in df_graf
@@ -437,9 +439,10 @@ def main():
                 st.metric(label='Filas', value=len(df_sem_td))
                 st.metric(label='Columnas', value=len(df_sem_td.columns))
                 
-            series_tiempo, indice = extraer_datos_demanda(df_sem_td)
+            series_tiempo, indice, unique_ids = extraer_datos_demanda(df_sem_td)
             st.session_state.series_tiempo = series_tiempo
             st.session_state.indice = indice
+            st.session_state.unique_ids = unique_ids
             
             # Initialize session state variables if they don't exist
             if 'extra_periods' not in st.session_state:
@@ -499,7 +502,7 @@ def main():
                     with col4:
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
-                    grafica_interactiva(st.session_state.df_sem_td, st.session_state.df_graf)
+                    grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
         
         with tabs[1]:
 
