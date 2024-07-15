@@ -454,7 +454,7 @@ def main():
             st.session_state.unique_ids = unique_ids
             
             st.write(st.session_state.unique_ids)
-            st.write(st.session_state.df_graf) 
+            
             
             col_1_1, col_1_2 = st.columns([3, 1])
             
@@ -516,6 +516,8 @@ def main():
                     st.session_state.extra_periods = extra_periods_pms
                     st.session_state.error_global_pms = error_global  # Store error_global for PMS
                     st.session_state.df_graf = df_graf
+
+                    st.write(st.session_state.df_graf) 
                     
                     col3, buffer2, col4 = st.columns([4, 1, 2])
                     with col3:               
@@ -528,13 +530,13 @@ def main():
                     with col4:
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
-                if st.session_state.unique_ids and st.session_state.df_graf is not None:
-                    st.write(st.session_state.unique_ids)
-                    st.write(st.session_state.df_graf)
-                    #grafica_interactiva(st.session_sta
-                    #grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
-                else:
-                    st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                                  
+                    if st.session_state.unique_ids and st.session_state.df_graf is not None:
+                        st.write(st.session_state.unique_ids)
+                        st.write(st.session_state.df_graf)
+                        #grafica_interactiva(st.session_sta
+                        #grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                    else:
+                        st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                                  
                     
                   
         
