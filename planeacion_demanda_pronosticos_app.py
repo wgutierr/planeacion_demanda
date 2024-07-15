@@ -409,6 +409,12 @@ def main():
     if 'df_orig' not in st.session_state:
         st.session_state.df_orig = None
         
+    if 'unique_ids' not in st.session_state:
+        st.session_state.unique_ids = []  # Initialize unique_ids as an empty list
+
+    if 'df_graf' not in st.session_state:
+        st.session_state.df_graf = None  # Initialize df_graf as None
+        
     if seccion == 'Carga de datos':
 
         github_url = 'https://raw.githubusercontent.com/wgutierr/planeacion_demanda/main/dataset/demanda_dia.csv'
@@ -505,7 +511,13 @@ def main():
                     with col4:
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
+                if st.session_state.unique_ids and st.session_state.df_graf is not None:
                     grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                else:
+                    st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                    
+                    
+                    
+                  
         
         with tabs[1]:
 
