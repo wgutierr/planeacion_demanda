@@ -6,27 +6,23 @@
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 import streamlit as st
 from io import BytesIO
+import requests
 
 
 # # <b><font color="navy">1. Promedio Movil Simple PMS</span></font></b>
 
 # ## 1.1 Cargar datos
 
-# In[2]:
+# # Ruta datos demanda
+# ruta_demanda = r'dataset\demanda_dia.csv'
+# 
+# # Leer archivo
+# df = pd.read_csv(ruta_demanda, encoding='utf-8' )  
 
-
-# Ruta datos demanda
-ruta_demanda = r'dataset\demanda_dia.csv'
-
-# Leer archivo
-df = pd.read_csv(ruta_demanda, encoding='utf-8' )  
-
-
-# In[14]:
+# In[3]:
 
 
 @st.cache_data
@@ -36,9 +32,18 @@ def cargar_datos(nombre_archivo):
     return df
 
 
+# In[4]:
+
+
+def cargar_datos_desde_github(url):
+    response = requests.get(url)
+    response.raise_for_status()  # Check if the request was successful
+    return pd.read_csv(BytesIO(response.content), encoding='utf-8')
+
+
 # ## 1.2. Pre-procesamiento de datos
 
-# In[3]:
+# In[5]:
 
 
 def preprocesamiento_1(df):
@@ -66,15 +71,11 @@ def preprocesamiento_1(df):
     return df_sem_td
 
 
-# In[4]:
-
-
-df_sem_td = preprocesamiento_1(df)
-
+# df_sem_td = preprocesamiento_1(df)
 
 # ## 1.3. Funciones para calcular PMS
 
-# In[5]:
+# In[7]:
 
 
 def extraer_datos_demanda(df_sem_td):
@@ -87,7 +88,7 @@ def extraer_datos_demanda(df_sem_td):
     return series_tiempo
 
 
-# In[6]:
+# In[8]:
 
 
 def promedio_movil(demanda, extra_periods, n):
@@ -119,7 +120,7 @@ def promedio_movil(demanda, extra_periods, n):
     return df
 
 
-# In[7]:
+# In[9]:
 
 
 def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, barra_progreso_pms=None):
@@ -201,7 +202,7 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
     return forecast_siguiente, mejor_n, rmse_mejor_n, error_global
 
 
-# In[8]:
+# In[10]:
 
 
 def entregable_pms(forecast_siguiente, mejor_n, rmse_mejor_n, df_sem_td): 
@@ -214,7 +215,7 @@ def entregable_pms(forecast_siguiente, mejor_n, rmse_mejor_n, df_sem_td):
 
 # ### 2.1. Funcion para calcular SE Simple por cada Sku
 
-# In[9]:
+# In[11]:
 
 
 def suavizacion_exp_simple(demanda, extra_periods, alfa):
@@ -247,7 +248,7 @@ def suavizacion_exp_simple(demanda, extra_periods, alfa):
 
 # ### 2.2 Función para aplicar mejor alfa a todos los Sku
 
-# In[10]:
+# In[12]:
 
 
 def generacion_mejor_suavizacion_exp(series_tiempo, extra_periods, alfa_min, alfa_max, barra_progreso_se=None):
@@ -333,7 +334,7 @@ def generacion_mejor_suavizacion_exp(series_tiempo, extra_periods, alfa_min, alf
 
 # ## Archivo Final
 
-# In[11]:
+# In[13]:
 
 
 def entregable_se(forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, df_sem_td): 
@@ -342,7 +343,7 @@ def entregable_se(forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, df_sem_td)
     return df_return_se                    
 
 
-# In[12]:
+# In[14]:
 
 
 def entregable(forecast_siguiente, mejor_n, rmse_mejor_n, forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, df_sem_td): 
@@ -353,7 +354,7 @@ def entregable(forecast_siguiente, mejor_n, rmse_mejor_n, forecast_siguiente_se,
 
 # # <b><font color="navy">3. Ejecución APP</span></font></b>
 
-# In[23]:
+# In[15]:
 
 
 def main():
@@ -367,15 +368,20 @@ def main():
         st.session_state.df_orig = None
         
     if seccion == 'Carga de datos':
+
+        github_url = "https://github.com/wgutierr/planeacion_demanda/blob/main/dataset/demanda_dia.csv"
         
-        archivo_demanda = st.file_uploader("Cargar archivo demanda por día", type="csv")
+        if st.button("Cargar datos desde GitHub"):
+            st.session_state.df_orig = cargar_datos_desde_github(github_url)
+            
+        #archivo_demanda = st.file_uploader("Cargar archivo demanda por día", type="csv")
         
-        if archivo_demanda is not None:
-            st.session_state.df_orig = cargar_datos(archivo_demanda)                 
+        #if archivo_demanda is not None:
+        #    st.session_state.df_orig = cargar_datos(archivo_demanda)                 
 
         if st.session_state.df_orig is not None:
             st.success('Archivo Cargado Exitosamente')
-            col1, col2 = st.columns([5, 2])
+            col1, buffer, col2 = st.columns([5, 1, 2])
             
             with col1:
                 st.write("Información Cargada:")
@@ -427,7 +433,7 @@ def main():
             
             extra_periods_pms = st.number_input("Períodos adicionales PMS", min_value=1, step=1)
             n_min_pms = st.number_input("Valor mínimo de n", min_value=1, max_value=52, step=1, value=3)
-            n_max_pms = st.number_input("Valor máximo de n", min_value=1, max_value=53, step=1, value=5)
+            n_max_pms = st.number_input("Valor máximo de n", min_value=1, max_value=53, step=1, value=16)
             
             if st.button('Generar Mejor PMS'):
                 with st.spinner('Calculando Pronosticos y Errores en Unidades...'):    
@@ -467,7 +473,7 @@ def main():
             alfa_max = st.number_input("Valor máximo de alfa", min_value=0.02, max_value=0.99, step=0.01, value=0.6)
     
             if st.button("Calcular SE"):
-                with st.spinner('Calculando Pronosticos y errores en Unidades...'):
+                with st.spinner('Calculando Pronosticos y Errores en Unidades...'):
                     barra_progreso_se = st.progress(0)
                     forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, error_global_se = generacion_mejor_suavizacion_exp(
                         st.session_state.series_tiempo, extra_periods_se, alfa_min, alfa_max, barra_progreso_se
@@ -517,16 +523,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 

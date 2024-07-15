@@ -38,7 +38,7 @@ def cargar_datos(nombre_archivo):
 def cargar_datos_desde_github(url):
     response = requests.get(url)
     response.raise_for_status()  # Check if the request was successful
-    return pd.read_csv(BytesIO(response.content))
+    return pd.read_csv(BytesIO(response.content), encoding='utf-8')
 
 
 # ## 1.2. Pre-procesamiento de datos
