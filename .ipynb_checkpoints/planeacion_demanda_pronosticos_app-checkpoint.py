@@ -453,6 +453,9 @@ def main():
             st.session_state.indice = indice
             st.session_state.unique_ids = unique_ids
             
+            st.write(st.session_state.unique_ids)
+            st.write(st.session_state.df_graf) 
+            
             col_1_1, col_1_2 = st.columns([3, 1])
             
             with col_1_1:
@@ -531,8 +534,7 @@ def main():
                     #grafica_interactiva(st.session_sta
                     #grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
                 else:
-                    st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                    
-                    
+                    st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                                  
                     
                   
         
