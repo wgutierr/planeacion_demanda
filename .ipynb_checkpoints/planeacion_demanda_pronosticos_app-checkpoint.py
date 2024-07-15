@@ -53,7 +53,7 @@ def preprocesamiento_1(df):
     df_sem.reset_index(inplace=True)
     
     # Seleccionar nombres de SKU unicos
-    unique_ids = df_sem['COD_SKU'].unique()
+    unique_ids = df_sem['DESC_SKU'].unique()
     
     # Colocar semanas como columnas con una tabla dinamica
     df_sem_td = df_sem.pivot(index=['COD_SKU', 'DESC_SKU'], columns='FECHA', values='DEMANDA').fillna(0)
@@ -74,25 +74,6 @@ def preprocesamiento_1(df):
 # df_sem_td = preprocesamiento_1(df)
 
 # ## 1.3. Funciones para calcular PMS
-
-# In[25]:
-
-
-def extraer_datos_demanda(df_sem_td):
-    # Seleccionar nombres de SKU unicos
-    unique_ids = df_sem_td['DESC_SKU'].unique()
-    
-    # Seleccionar las columnas que comienzan por '202' (las de demanda)
-    columnas_dem = df_sem_td.filter(like='202')
-
-    # Seleccionar las fechas para posteriormente graficar
-    indice = columnas_dem.columns
-    
-    # Llevar valores de demanda a una lista
-    series_tiempo = columnas_dem.values.tolist()
-
-    return series_tiempo, indice, unique_ids
-
 
 # In[19]:
 
@@ -216,8 +197,6 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
     return forecast_siguiente, mejor_n, rmse_mejor_n, error_global, df_graf
 
 
-# In[24]:
-
 
 def grafica_interactiva(unique_ids, df_graf):
     
@@ -252,9 +231,18 @@ def grafica_interactiva(unique_ids, df_graf):
         title='Demanda vs Pronostico',
         xaxis_title='Date',
         yaxis_title='Values',
-        template='ggplot2'  # Apply ggplot2 style
+        #template=None,  # Apply ggplot2 style
+        legend=dict(
+            orientation='h',  # Horizontal legend orientation
+            yanchor='top',  # Anchor legend to the top
+            y=1.05,  # Adjust the y position of the legend
+            xanchor='right',  # Anchor legend to the right
+            x=1  # Adjust the x position of the legend
+        ),
+        plot_bgcolor='#F0F0F0',  # Set the plot background color to a light gray
     )
-    fig.show()
+    #
+    return fig
 
 
 # In[21]:
@@ -409,7 +397,7 @@ def entregable(forecast_siguiente, mejor_n, rmse_mejor_n, forecast_siguiente_se,
 
 # # <b><font color="navy">3. Ejecución APP</span></font></b>
 
-# In[15]:
+# In[53]:
 
 
 def main():
@@ -451,11 +439,8 @@ def main():
             st.session_state.df_sem_td = df_sem_td
             st.session_state.series_tiempo = series_tiempo
             st.session_state.indice = indice
-            st.session_state.unique_ids = unique_ids
-            
-            st.write(st.session_state.unique_ids)
-            
-            
+            st.session_state.unique_ids = unique_ids                       
+                        
             col_1_1, col_1_2 = st.columns([3, 1])
             
             with col_1_1:
@@ -463,9 +448,7 @@ def main():
                 st.dataframe(df_sem_td)
             with col_1_2:
                 st.metric(label='Filas', value=len(df_sem_td))
-                st.metric(label='Columnas', value=len(df_sem_td.columns))
-                
-           
+                st.metric(label='Columnas', value=len(df_sem_td.columns))               
             
             
             # Initialize session state variables if they don't exist
@@ -479,13 +462,10 @@ def main():
                 st.session_state.rmse_mejor_n = []
             if 'error_global_pms' not in st.session_state:
                 st.session_state.error_global_pms = None  # Initialize error_global_pms
-
                 
         else:
             st.error('No se ha cargado el archivo de demanda o no se cargó correctamente. Verifique el formato y vuelva a intentarlo.')
-        
-            
-        
+
     elif seccion == 'Forecasting':
         
         tabs = st.tabs(['Promedio Movil Simple', 'Suavizacion Exponencial'])
@@ -516,10 +496,9 @@ def main():
                     st.session_state.extra_periods = extra_periods_pms
                     st.session_state.error_global_pms = error_global  # Store error_global for PMS
                     st.session_state.df_graf = df_graf
-
-                    st.write(st.session_state.df_graf) 
-                    
+                                       
                     col3, buffer2, col4 = st.columns([4, 1, 2])
+                    
                     with col3:               
                         df_resultado_pms = entregable_pms(
                         st.session_state.forecast_siguiente, st.session_state.mejor_n, st.session_state.rmse_mejor_n,
@@ -527,19 +506,17 @@ def main():
                         
                         st.dataframe(df_resultado_pms)
                         st.session_state.df_resultado_pms = df_resultado_pms
+                        
                     with col4:
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
-                    if st.session_state.unique_ids and st.session_state.df_graf is not None:
-                        st.write(st.session_state.unique_ids)
-                        st.write(st.session_state.df_graf)
-                        #grafica_interactiva(st.session_sta
-                        #grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                    if 'unique_ids' in st.session_state and 'df_graf' in st.session_state:
+                        fig = grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                        st.plotly_chart(fig)
+               
                     else:
-                        st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                                  
-                    
-                  
-        
+                        st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                
+                                              
         with tabs[1]:
 
             st.title("Suavización Exponencial")
@@ -600,4 +577,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# In[ ]:
+
+
+
 
