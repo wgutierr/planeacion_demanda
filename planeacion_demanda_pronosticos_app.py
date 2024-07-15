@@ -81,7 +81,7 @@ def extraer_datos_demanda(df_sem_td):
 # In[19]:
 
 
-def promedio_movil(demanda, extra_periods, n, index):
+def promedio_movil(demanda, extra_periods, n, indice):
     
     # Determina el numero de datos de la demanda
     largo_demanda = len(demanda) 
@@ -99,15 +99,15 @@ def promedio_movil(demanda, extra_periods, n, index):
         forecast[t+u] = np.mean(demanda[t-n+1:t+1]) 
 
     # Selecciona la ultima fecha del set de datos
-    max_fecha = index[-1]
+    max_fecha = indice[-1]
     # Genera nuevas fechas semanales a partir de la ultima fecha y el numero de periodos extra
     nuevas_fechas = pd.date_range(start=max_fecha + pd.Timedelta(days=7), periods=extra_periods, freq='W-SUN')
     # Combina las fechas actuales con las nuevas
-    index = index.append(nuevas_fechas)
+    indice = indice.append(nuevas_fechas)
     # Crea el data frame con los pronósticos
     df = pd.DataFrame.from_dict({'DEMANDA': demanda, 'FORECAST': forecast, 'ERROR': demanda-forecast,}) 
     # Asigna el index
-    df.index = index
+    df.index = indice
     
     # Regresa df como resultado   
     return df
@@ -116,7 +116,7 @@ def promedio_movil(demanda, extra_periods, n, index):
 # In[9]:
 
 
-def generacion_mejor_promedio_movil(series_tiempo, extra_periods, index, n_min, n_max, barra_progreso_pms=None):
+def generacion_mejor_promedio_movil(series_tiempo, extra_periods, indice, n_min, n_max, indice, barra_progreso_pms=None):
     
     # Crea una lista vacia para acumular el pronostico del periodo siguiente 
     forecast_siguiente = [] 
@@ -144,7 +144,7 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, index, n_min, 
         
         for n in range(n_min,n_max):        
             # Aplica funcion de promedio por cada n
-            df_prom_mov =  promedio_movil(serie, extra_periods=extra_periods, n=n, index=index)
+            df_prom_mov =  promedio_movil(serie, extra_periods=extra_periods, n=n, indice=indice)
             # Acumula los parametros
             params.append(n)
             # Acumula las tablas
@@ -398,7 +398,7 @@ def entregable(forecast_siguiente, mejor_n, rmse_mejor_n, forecast_siguiente_se,
 
 
 def main():
-    # Split layout into two columns
+    # Split layout into two columnscd Local_files/Python/Eafit/planeacion_demanda/planeacion_demanda_pronosticos_app.py
     st.title("App para Cálculo de Pronósticos")
 
     st.sidebar.title('Flujo de Datos')
@@ -476,7 +476,7 @@ def main():
                     barra_progreso_pms = st.progress(0)
                     
                     forecast_siguiente, mejor_n, rmse_mejor_n, error_global, df_graf = generacion_mejor_promedio_movil(
-                        st.session_state.series_tiempo, extra_periods_pms, n_min_pms, n_max_pms, barra_progreso_pms
+                        st.session_state.series_tiempo, extra_periods_pms, n_min_pms, n_max_pms, st.session_state.indice, barra_progreso_pms
                     )
                     
                     barra_progreso_pms.progress(100)
