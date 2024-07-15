@@ -487,8 +487,8 @@ def main():
                     barra_progreso_pms = st.progress(0)
                     
                     forecast_siguiente, mejor_n, rmse_mejor_n, error_global, df_graf = generacion_mejor_promedio_movil(
-                        st.session_state.series_tiempo, extra_periods_pms, n_min_pms, n_max_pms, st.session_state.indice, barra_progreso_pms
-                    )
+                        st.session_state.series_tiempo, extra_periods_pms, n_min_pms, n_max_pms, st.session_state.indice, barra_progreso_pms)
+                    
                     
                     barra_progreso_pms.progress(100)
                     
@@ -532,8 +532,7 @@ def main():
                 with st.spinner('Calculando Pronosticos y Errores en Unidades...'):
                     barra_progreso_se = st.progress(0)
                     forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, error_global_se = generacion_mejor_suavizacion_exp(
-                        st.session_state.series_tiempo, extra_periods_se, alfa_min, alfa_max, barra_progreso_se
-                    )
+                        st.session_state.series_tiempo, extra_periods_se, alfa_min, alfa_max, barra_progreso_se)
                     barra_progreso_se.progress(100)
                     st.session_state.forecast_siguiente_se = forecast_siguiente_se
                     st.session_state.mejor_alfa = mejor_alfa
