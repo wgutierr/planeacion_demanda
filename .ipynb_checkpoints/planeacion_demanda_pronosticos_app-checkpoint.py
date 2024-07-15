@@ -116,7 +116,7 @@ def promedio_movil(demanda, extra_periods, n, indice):
 # In[9]:
 
 
-def generacion_mejor_promedio_movil(series_tiempo, extra_periods, indice, n_min, n_max, barra_progreso_pms=None):
+def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, indice, barra_progreso_pms=None):
     
     # Crea una lista vacia para acumular el pronostico del periodo siguiente 
     forecast_siguiente = [] 
