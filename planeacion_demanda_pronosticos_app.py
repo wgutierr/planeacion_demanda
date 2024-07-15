@@ -30,7 +30,7 @@ def cargar_datos_desde_github(url):
 
 # ## 1.2. Pre-procesamiento de datos
 
-# In[17]:
+# In[47]:
 
 
 def preprocesamiento_1(df):
@@ -52,12 +52,12 @@ def preprocesamiento_1(df):
     # Resetear Index para aplanar la tabla
     df_sem.reset_index(inplace=True)
     
+    # Seleccionar nombres de SKU unicos
+    unique_ids = df_sem['COD_SKU'].unique()
+    
     # Colocar semanas como columnas con una tabla dinamica
     df_sem_td = df_sem.pivot(index=['COD_SKU', 'DESC_SKU'], columns='FECHA', values='DEMANDA').fillna(0)
-
-    # Seleccionar nombres de SKU unicos
-    unique_ids = df_sem_td['COD_SKU'].unique()
-    
+   
     # Seleccionar las columnas que comienzan por '202' (las de demanda)
     columnas_dem = df_sem_td.filter(like='202')
 
