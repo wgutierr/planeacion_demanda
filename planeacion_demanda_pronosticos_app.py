@@ -16,19 +16,13 @@ import requests
 
 # ## 1.1 Cargar datos
 
-# # Ruta datos demanda
-# ruta_demanda = r'dataset\demanda_dia.csv'
-# 
-# # Leer archivo
-# df = pd.read_csv(ruta_demanda, encoding='utf-8' )  
-
 # In[4]:
 
 
 def cargar_datos_desde_github(url):
     response = requests.get(url)
     response.raise_for_status()  # Check if the request was successful
-    return pd.read_csv(BytesIO(response.content), , encoding='utf-8')
+    return pd.read_csv(BytesIO(response.content), encoding='utf-8')
 
 
 # ## 1.2. Pre-procesamiento de datos
