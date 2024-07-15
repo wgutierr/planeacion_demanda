@@ -16,15 +16,11 @@ import requests
 
 # ## 1.1 Cargar datos
 
-# In[2]:
-
-
-# Ruta datos demanda
-ruta_demanda = r'dataset\demanda_dia.csv'
-
-# Leer archivo
-df = pd.read_csv(ruta_demanda, encoding='utf-8' )  
-
+# # Ruta datos demanda
+# ruta_demanda = r'dataset\demanda_dia.csv'
+# 
+# # Leer archivo
+# df = pd.read_csv(ruta_demanda, encoding='utf-8' )  
 
 # In[3]:
 
@@ -75,11 +71,7 @@ def preprocesamiento_1(df):
     return df_sem_td
 
 
-# In[6]:
-
-
-df_sem_td = preprocesamiento_1(df)
-
+# df_sem_td = preprocesamiento_1(df)
 
 # ## 1.3. Funciones para calcular PMS
 
