@@ -346,7 +346,7 @@ def main():
     st.title("App para Cálculo de Pronósticos")
 
     st.sidebar.title('Flujo de Datos')
-    seccion = st.sidebar.radio('ir a ⬇️', ('Carga de datos', 'Forecasting', 'Descargar Resultados'))
+    seccion = st.sidebar.radio('⬇️ ir a:', ('Carga de datos', 'Forecasting', 'Descargar Resultados'))
 
     if 'df_orig' not in st.session_state:
         st.session_state.df_orig = None
