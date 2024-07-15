@@ -56,7 +56,7 @@ def preprocesamiento_1(df):
     df_sem_td = df_sem.pivot(index=['COD_SKU', 'DESC_SKU'], columns='FECHA', values='DEMANDA').fillna(0)
 
     # Seleccionar nombres de SKU unicos
-    unique_ids = df_sem_td['DESC_SKU'].unique()
+    unique_ids = df_sem_td['COD_SKU'].unique()
     
     # Seleccionar las columnas que comienzan por '202' (las de demanda)
     columnas_dem = df_sem_td.filter(like='202')

@@ -54,18 +54,34 @@ def preprocesamiento_1(df):
     
     # Colocar semanas como columnas con una tabla dinamica
     df_sem_td = df_sem.pivot(index=['COD_SKU', 'DESC_SKU'], columns='FECHA', values='DEMANDA').fillna(0)
+
+    # Seleccionar nombres de SKU unicos
+    unique_ids = df_sem_td['COD_SKU'].unique()
     
-    return df_sem_td
+    # Seleccionar las columnas que comienzan por '202' (las de demanda)
+    columnas_dem = df_sem_td.filter(like='202')
+
+    # Seleccionar las fechas para posteriormente graficar
+    indice = columnas_dem.columns
+    
+    # Llevar valores de demanda a una lista
+    series_tiempo = columnas_dem.values.tolist()
+    
+    return df_sem_td, series_tiempo, indice, unique_ids
+    
 
 
 # df_sem_td = preprocesamiento_1(df)
 
 # ## 1.3. Funciones para calcular PMS
 
-# In[20]:
+# In[25]:
 
 
 def extraer_datos_demanda(df_sem_td):
+    # Seleccionar nombres de SKU unicos
+    unique_ids = df_sem_td['DESC_SKU'].unique()
+    
     # Seleccionar las columnas que comienzan por '202' (las de demanda)
     columnas_dem = df_sem_td.filter(like='202')
 
@@ -75,7 +91,7 @@ def extraer_datos_demanda(df_sem_td):
     # Llevar valores de demanda a una lista
     series_tiempo = columnas_dem.values.tolist()
 
-    return series_tiempo, indice
+    return series_tiempo, indice, unique_ids
 
 
 # In[19]:
@@ -203,9 +219,8 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
 # In[24]:
 
 
-def grafica_interactiva(df_sem_td, df_graf):
-    unique_ids = df_sem_td['DESC_SKU'].unique()
-    # Create a figure
+def grafica_interactiva(unique_ids, df_graf):
+    
     fig = make_subplots()
     
     # Create a plot for each DataFrame in df_graf
@@ -407,6 +422,12 @@ def main():
     if 'df_orig' not in st.session_state:
         st.session_state.df_orig = None
         
+    if 'unique_ids' not in st.session_state:
+        st.session_state.unique_ids = []  # Initialize unique_ids as an empty list
+
+    if 'df_graf' not in st.session_state:
+        st.session_state.df_graf = None  # Initialize df_graf as None
+        
     if seccion == 'Carga de datos':
 
         github_url = 'https://raw.githubusercontent.com/wgutierr/planeacion_demanda/main/dataset/demanda_dia.csv'
@@ -425,8 +446,12 @@ def main():
                 st.metric(label='Filas', value=len(st.session_state.df_orig))
                 st.metric(label='Columnas', value=len(st.session_state.df_orig.columns))
                 
-            df_sem_td = preprocesamiento_1(st.session_state.df_orig)
+            df_sem_td, series_tiempo, indice, unique_ids = preprocesamiento_1(st.session_state.df_orig)
+            
             st.session_state.df_sem_td = df_sem_td
+            st.session_state.series_tiempo = series_tiempo
+            st.session_state.indice = indice
+            st.session_state.unique_ids = unique_ids
             
             col_1_1, col_1_2 = st.columns([3, 1])
             
@@ -437,9 +462,8 @@ def main():
                 st.metric(label='Filas', value=len(df_sem_td))
                 st.metric(label='Columnas', value=len(df_sem_td.columns))
                 
-            series_tiempo, indice = extraer_datos_demanda(df_sem_td)
-            st.session_state.series_tiempo = series_tiempo
-            st.session_state.indice = indice
+           
+            
             
             # Initialize session state variables if they don't exist
             if 'extra_periods' not in st.session_state:
@@ -452,6 +476,8 @@ def main():
                 st.session_state.rmse_mejor_n = []
             if 'error_global_pms' not in st.session_state:
                 st.session_state.error_global_pms = None  # Initialize error_global_pms
+
+                
         else:
             st.error('No se ha cargado el archivo de demanda o no se cargó correctamente. Verifique el formato y vuelva a intentarlo.')
         
@@ -499,7 +525,13 @@ def main():
                     with col4:
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
-                    grafica_interactiva(st.session_state.df_sem_td, st.session_state.df_graf)
+                if st.session_state.unique_ids and st.session_state.df_graf is not None:
+                    grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                else:
+                    st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                    
+                    
+                    
+                  
         
         with tabs[1]:
 
