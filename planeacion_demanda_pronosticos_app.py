@@ -404,7 +404,7 @@ def entregable(forecast_siguiente, mejor_n, rmse_mejor_n, forecast_siguiente_se,
 
 def main():
     # Split layout into two columnscd Local_files/Python/Eafit/planeacion_demanda/planeacion_demanda_pronosticos_app.py
-    st.title("App para Cálculo de Pronósticos")
+    st.title("App para Cálculo de Pronósticos para Juanita")
 
     st.sidebar.title('Flujo de Datos')
     seccion = st.sidebar.radio('⬇️ ir a:', ('Carga de datos', 'Forecasting', 'Descargar Resultados'))
