@@ -204,7 +204,7 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
 
 
 def grafica_interactiva(df_sem_td, df_graf):
-    unique_ids = df_unidades['DESC_SKU'].unique()
+    unique_ids = df_sem_td['DESC_SKU'].unique()
     # Create a figure
     fig = make_subplots()
     
