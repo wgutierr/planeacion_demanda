@@ -30,7 +30,7 @@ def cargar_datos_desde_github(url):
 
 # ## 1.2. Pre-procesamiento de datos
 
-# In[17]:
+# In[47]:
 
 
 def preprocesamiento_1(df):
@@ -52,12 +52,12 @@ def preprocesamiento_1(df):
     # Resetear Index para aplanar la tabla
     df_sem.reset_index(inplace=True)
     
+    # Seleccionar nombres de SKU unicos
+    unique_ids = df_sem['COD_SKU'].unique()
+    
     # Colocar semanas como columnas con una tabla dinamica
     df_sem_td = df_sem.pivot(index=['COD_SKU', 'DESC_SKU'], columns='FECHA', values='DEMANDA').fillna(0)
-
-    # Seleccionar nombres de SKU unicos
-    unique_ids = df_sem_td['COD_SKU'].unique()
-    
+   
     # Seleccionar las columnas que comienzan por '202' (las de demanda)
     columnas_dem = df_sem_td.filter(like='202')
 
@@ -526,7 +526,10 @@ def main():
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
                 if st.session_state.unique_ids and st.session_state.df_graf is not None:
-                    grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                    st.write(st.session_state.unique_ids)
+                    st.write(st.session_state.df_graf)
+                    #grafica_interactiva(st.session_sta
+                    #grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
                 else:
                     st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                    
                     

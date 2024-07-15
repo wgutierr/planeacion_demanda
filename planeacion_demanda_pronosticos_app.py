@@ -526,7 +526,10 @@ def main():
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
                      
                 if st.session_state.unique_ids and st.session_state.df_graf is not None:
-                    grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
+                    st.write(st.session_state.unique_ids)
+                    st.write(st.session_state.df_graf)
+                    #grafica_interactiva(st.session_sta
+                    #grafica_interactiva(st.session_state.unique_ids, st.session_state.df_graf)
                 else:
                     st.warning('No se han cargado los datos necesarios para generar la gráfica interactiva.')                    
                     
