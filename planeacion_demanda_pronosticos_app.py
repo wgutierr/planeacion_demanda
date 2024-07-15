@@ -54,8 +54,21 @@ def preprocesamiento_1(df):
     
     # Colocar semanas como columnas con una tabla dinamica
     df_sem_td = df_sem.pivot(index=['COD_SKU', 'DESC_SKU'], columns='FECHA', values='DEMANDA').fillna(0)
+
+    # Seleccionar nombres de SKU unicos
+    unique_ids = df_sem_td['DESC_SKU'].unique()
     
-    return df_sem_td
+    # Seleccionar las columnas que comienzan por '202' (las de demanda)
+    columnas_dem = df_sem_td.filter(like='202')
+
+    # Seleccionar las fechas para posteriormente graficar
+    indice = columnas_dem.columns
+    
+    # Llevar valores de demanda a una lista
+    series_tiempo = columnas_dem.values.tolist()
+    
+    return df_sem_td, series_tiempo, indice, unique_ids
+    
 
 
 # df_sem_td = preprocesamiento_1(df)
@@ -433,8 +446,12 @@ def main():
                 st.metric(label='Filas', value=len(st.session_state.df_orig))
                 st.metric(label='Columnas', value=len(st.session_state.df_orig.columns))
                 
-            df_sem_td = preprocesamiento_1(st.session_state.df_orig)
+            df_sem_td, series_tiempo, indice, unique_ids = preprocesamiento_1(st.session_state.df_orig)
+            
             st.session_state.df_sem_td = df_sem_td
+            st.session_state.series_tiempo = series_tiempo
+            st.session_state.indice = indice
+            st.session_state.unique_ids = unique_ids
             
             col_1_1, col_1_2 = st.columns([3, 1])
             
@@ -445,10 +462,8 @@ def main():
                 st.metric(label='Filas', value=len(df_sem_td))
                 st.metric(label='Columnas', value=len(df_sem_td.columns))
                 
-            series_tiempo, indice, unique_ids = extraer_datos_demanda(df_sem_td)
-            st.session_state.series_tiempo = series_tiempo
-            st.session_state.indice = indice
-            st.session_state.unique_ids = unique_ids
+           
+            
             
             # Initialize session state variables if they don't exist
             if 'extra_periods' not in st.session_state:
