@@ -353,7 +353,7 @@ def main():
         
     if seccion == 'Carga de datos':
 
-        github_url = "https://github.com/wgutierr/planeacion_demanda/blob/main/dataset/demanda_dia.csv"
+        github_url = 'https://raw.githubusercontent.com/wgutierr/planeacion_demanda/main/dataset/demanda_dia.csv'
         
         if st.button("Cargar datos desde GitHub"):
             st.session_state.df_orig = cargar_datos_desde_github(github_url)          

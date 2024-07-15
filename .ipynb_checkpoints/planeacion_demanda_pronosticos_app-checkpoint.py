@@ -16,22 +16,6 @@ import requests
 
 # ## 1.1 Cargar datos
 
-# # Ruta datos demanda
-# ruta_demanda = r'dataset\demanda_dia.csv'
-# 
-# # Leer archivo
-# df = pd.read_csv(ruta_demanda, encoding='utf-8' )  
-
-# In[3]:
-
-
-@st.cache_data
-def cargar_datos(nombre_archivo):
-    df = pd.read_csv(nombre_archivo, encoding='utf-8')
-
-    return df
-
-
 # In[4]:
 
 
@@ -369,16 +353,11 @@ def main():
         
     if seccion == 'Carga de datos':
 
-        github_url = "https://github.com/wgutierr/planeacion_demanda/blob/main/dataset/demanda_dia.csv"
+        github_url = 'https://raw.githubusercontent.com/wgutierr/planeacion_demanda/main/dataset/demanda_dia.csv'
         
         if st.button("Cargar datos desde GitHub"):
-            st.session_state.df_orig = cargar_datos_desde_github(github_url)
-            
-        #archivo_demanda = st.file_uploader("Cargar archivo demanda por día", type="csv")
-        
-        #if archivo_demanda is not None:
-        #    st.session_state.df_orig = cargar_datos(archivo_demanda)                 
-
+            st.session_state.df_orig = cargar_datos_desde_github(github_url)          
+              
         if st.session_state.df_orig is not None:
             st.success('Archivo Cargado Exitosamente')
             col1, buffer, col2 = st.columns([5, 1, 2])
