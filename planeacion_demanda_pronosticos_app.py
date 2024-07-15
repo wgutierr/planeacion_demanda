@@ -11,12 +11,15 @@ import streamlit as st
 from io import BytesIO
 import requests
 
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
+
 
 # # <b><font color="navy">1. Promedio Movil Simple PMS</span></font></b>
 
 # ## 1.1 Cargar datos
 
-# In[4]:
+# In[16]:
 
 
 def cargar_datos_desde_github(url):
@@ -27,7 +30,7 @@ def cargar_datos_desde_github(url):
 
 # ## 1.2. Pre-procesamiento de datos
 
-# In[5]:
+# In[17]:
 
 
 def preprocesamiento_1(df):
@@ -59,23 +62,26 @@ def preprocesamiento_1(df):
 
 # ## 1.3. Funciones para calcular PMS
 
-# In[7]:
+# In[20]:
 
 
 def extraer_datos_demanda(df_sem_td):
     # Seleccionar las columnas que comienzan por '202' (las de demanda)
     columnas_dem = df_sem_td.filter(like='202')
+
+    # Seleccionar las fechas para posteriormente graficar
+    indice = columnas_dem.columns
     
     # Llevar valores de demanda a una lista
     series_tiempo = columnas_dem.values.tolist()
 
-    return series_tiempo
+    return series_tiempo, indice
 
 
-# In[8]:
+# In[19]:
 
 
-def promedio_movil(demanda, extra_periods, n):
+def promedio_movil(demanda, extra_periods, n, index):
     
     # Determina el numero de datos de la demanda
     largo_demanda = len(demanda) 
@@ -91,15 +97,18 @@ def promedio_movil(demanda, extra_periods, n):
     for u in range(1,extra_periods + 1):
         # Pronostica el periodo siguiente
         forecast[t+u] = np.mean(demanda[t-n+1:t+1]) 
-    
+
+    # Selecciona la ultima fecha del set de datos
+    max_fecha = index[-1]
+    # Genera nuevas fechas semanales a partir de la ultima fecha y el numero de periodos extra
+    nuevas_fechas = pd.date_range(start=max_fecha + pd.Timedelta(days=7), periods=extra_periods, freq='W-SUN')
+    # Combina las fechas actuales con las nuevas
+    index = index.append(nuevas_fechas)
     # Crea el data frame con los pronósticos
     df = pd.DataFrame.from_dict({'DEMANDA': demanda, 'FORECAST': forecast, 'ERROR': demanda-forecast,}) 
+    # Asigna el index
+    df.index = index
     
-    # Calcula 'Error Porcentual' usando función lambda 
-    df['ERROR_PORCENTUAL'] = df.apply(
-                    lambda fila: 2 if (fila['DEMANDA'] <= 0 and pd.notna(fila['FORECAST'])) else abs(fila['DEMANDA'] 
-                        - fila['FORECAST']) / fila['DEMANDA'], axis=1)
-  
     # Regresa df como resultado   
     return df
 
@@ -107,7 +116,7 @@ def promedio_movil(demanda, extra_periods, n):
 # In[9]:
 
 
-def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, barra_progreso_pms=None):
+def generacion_mejor_promedio_movil(series_tiempo, extra_periods, index, n_min, n_max, barra_progreso_pms=None):
     
     # Crea una lista vacia para acumular el pronostico del periodo siguiente 
     forecast_siguiente = [] 
@@ -117,7 +126,8 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
     mejor_n = []
     # Crea una lista vacia para acumular el n con menor error
     rmse_mejor_n = []
-
+    # Crea una lista vacia para acumular el mejor df para luego graficar
+    df_graf = []
     # Para calculo del error total
     total_error_abs = []
     total_demanda = []
@@ -134,7 +144,7 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
         
         for n in range(n_min,n_max):        
             # Aplica funcion de promedio por cada n
-            df_prom_mov =  promedio_movil(serie, extra_periods = extra_periods, n = n)
+            df_prom_mov =  promedio_movil(serie, extra_periods=extra_periods, n=n, index=index)
             # Acumula los parametros
             params.append(n)
             # Acumula las tablas
@@ -156,7 +166,9 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
         minimo = np.argmin(KPIs)
         # Seleciona el n correspondiente al mejor error
         mejor_param_n = params[minimo]
-        # Selecciona el wmape minimo
+        # Selecciona el df con el n correspondiente al menor error
+        mejor_df = dfs[minimo]
+        # Selecciona el mae% minimo
         mae_porc_minimo = np.min(KPIs)
         # Selecciona la suma del error absoluto correspondiente al mejor n 
         sum_error_abs_min = error_abs[minimo]
@@ -177,16 +189,60 @@ def generacion_mejor_promedio_movil(series_tiempo, extra_periods, n_min, n_max, 
         #Calcula error global
         total_error_abs.append(sum_error_abs_min)
         total_demanda.append(sum_dem_min)
-
+        # Acumula el mejor df por cada referencia para luego graficar
+        df_graf.append(mejor_df)
+        
         if barra_progreso_pms:
             barra_progreso_pms.progress((i + 1) / total_series)
     # Calcula el mae% de todos los sku
     error_global = np.sum(total_error_abs) / np.sum(total_demanda) if np.sum(total_demanda) != 0 else float('inf')
     
-    return forecast_siguiente, mejor_n, rmse_mejor_n, error_global
+    return forecast_siguiente, mejor_n, rmse_mejor_n, error_global, df_graf
 
 
-# In[10]:
+# In[24]:
+
+
+def grafica_interactiva(df_sem_td, df_graf):
+    unique_ids = df_unidades['DESC_SKU'].unique()
+    # Create a figure
+    fig = make_subplots()
+    
+    # Create a plot for each DataFrame in df_graf
+    for i, df in enumerate(df_graf):
+        unique_id = unique_ids[i]
+        visible = True if i == 0 else False  # Set the first element to be visible by default
+        fig.add_trace(go.Scatter(x=df.index, y=df['DEMANDA'], mode='lines', name=f'Demanda - {unique_id}', line=dict(color='teal'), visible=visible))
+        fig.add_trace(go.Scatter(x=df.index, y=df['FORECAST'], mode='lines', name=f'Pronóstico - {unique_id}', line=dict(dash='dot', color='maroon'), visible=visible))
+    
+    # Create update menus
+    update_menus = [
+        {
+            'buttons': [
+                {
+                    'label': unique_ids[i],
+                    'method': 'update',
+                    'args': [{'visible': [True if j//2 == i else False for j in range(len(df_graf[:len(unique_ids)]) * 2)]}]
+                }
+                for i in range(len(unique_ids))
+            ],
+            'direction': 'down',
+            'showactive': True,
+        }
+    ]
+    
+    # Update the layout with dropdown menu
+    fig.update_layout(
+        updatemenus=update_menus,
+        title='Demanda vs Pronostico',
+        xaxis_title='Date',
+        yaxis_title='Values',
+        template='ggplot2'  # Apply ggplot2 style
+    )
+    fig.show()
+
+
+# In[21]:
 
 
 def entregable_pms(forecast_siguiente, mejor_n, rmse_mejor_n, df_sem_td): 
@@ -318,7 +374,7 @@ def generacion_mejor_suavizacion_exp(series_tiempo, extra_periods, alfa_min, alf
 
 # ## Archivo Final
 
-# In[13]:
+# In[22]:
 
 
 def entregable_se(forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, df_sem_td): 
@@ -327,7 +383,7 @@ def entregable_se(forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, df_sem_td)
     return df_return_se                    
 
 
-# In[14]:
+# In[23]:
 
 
 def entregable(forecast_siguiente, mejor_n, rmse_mejor_n, forecast_siguiente_se, mejor_alfa, rmse_mejor_alfa, df_sem_td): 
@@ -381,8 +437,9 @@ def main():
                 st.metric(label='Filas', value=len(df_sem_td))
                 st.metric(label='Columnas', value=len(df_sem_td.columns))
                 
-            series_tiempo = extraer_datos_demanda(df_sem_td)
+            series_tiempo, indice = extraer_datos_demanda(df_sem_td)
             st.session_state.series_tiempo = series_tiempo
+            st.session_state.indice = indice
             
             # Initialize session state variables if they don't exist
             if 'extra_periods' not in st.session_state:
@@ -418,7 +475,7 @@ def main():
                 with st.spinner('Calculando Pronosticos y Errores en Unidades...'):    
                     barra_progreso_pms = st.progress(0)
                     
-                    forecast_siguiente, mejor_n, rmse_mejor_n, error_global = generacion_mejor_promedio_movil(
+                    forecast_siguiente, mejor_n, rmse_mejor_n, error_global, df_graf = generacion_mejor_promedio_movil(
                         st.session_state.series_tiempo, extra_periods_pms, n_min_pms, n_max_pms, barra_progreso_pms
                     )
                     
@@ -429,6 +486,7 @@ def main():
                     st.session_state.rmse_mejor_n = rmse_mejor_n
                     st.session_state.extra_periods = extra_periods_pms
                     st.session_state.error_global_pms = error_global  # Store error_global for PMS
+                    st.session_state.df_graf = df_graf
                     
                     col3, buffer2, col4 = st.columns([4, 1, 2])
                     with col3:               
@@ -440,8 +498,9 @@ def main():
                         st.session_state.df_resultado_pms = df_resultado_pms
                     with col4:
                         st.metric(label='MAE% Global PMS', value="{:.2%}".format(error_global), delta = 'en  unidades')
-             
-                
+                     
+                    grafica_interactiva(st.session_state.df_sem_td, st.session_state.df_graf)
+        
         with tabs[1]:
 
             st.title("Suavización Exponencial")
